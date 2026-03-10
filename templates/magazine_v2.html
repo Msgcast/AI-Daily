@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Poppins:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Poppins', 'Noto Serif SC', serif;
+            background: radial-gradient(circle at 0% 0%, #fdfbfb 0%, #ebedee 100%);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .aura-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 10% 20%, rgba(225, 68, 68, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 40%);
+            z-index: -1;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+        }
+
+        .giant-quote-outline {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 160px;
+            color: transparent;
+            -webkit-text-stroke: 1px #E5E7EB;
+            line-height: 1;
+        }
+
+        .serif-bold {
+            font-family: 'Noto Serif SC', serif;
+            font-weight: 900;
+        }
+
+        .eng-light {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 300;
+        }
+    </style>
+</head>
+
+<body class="w-[1200px] h-[1450px] flex justify-center items-center p-12 relative overflow-hidden">
+    <div class="aura-bg"></div>
+
+    <!-- 主卡片 -->
+    <div class="w-full h-full glass-card rounded-[2rem] flex flex-col p-16 relative overflow-hidden">
+
+        <!-- Header: 专业刊头 -->
+        <header class="flex justify-between items-start mb-10 border-b border-gray-100 pb-8">
+            <div class="flex flex-col">
+                <h1 class="text-black text-5xl font-black uppercase tracking-tighter">{{ header_title_en }}</h1>
+                <p class="eng-light text-gray-400 text-sm tracking-[0.3em] uppercase mt-2">{{ header_subtitle_en }}</p>
+            </div>
+            <div class="text-right">
+                <span class="text-xs font-bold text-gray-300 tracking-widest uppercase">/ {{ date }} /</span>
+                <div class="mt-2 h-1 w-full bg-[#e14444]"></div>
+            </div>
+        </header>
+
+        <!-- Main Body: 4+8 -->
+        <div class="flex w-full mb-8">
+            <!-- 4 侧边栏: 视觉锚点 -->
+            <aside class="w-1/3 pr-12 relative">
+                <div class="giant-quote-outline opacity-60">“</div>
+                <p class="serif-bold text-3xl leading-tight text-black -mt-12 relative z-10">
+                    {{ left_philosophical_quote }}
+                </p>
+                <div class="mt-12 space-y-4">
+                    <div class="w-12 h-1 bg-black"></div>
+                </div>
+            </aside>
+
+            <!-- 8 核心区: 紧凑布局 -->
+            <main class="w-2/3 pl-12 border-l border-white/50">
+                <h2 class="serif-bold text-4xl text-black mb-10 leading-snug">
+                    {{ right_main_title }}
+                </h2>
+                <div class="text-gray-700 text-xl leading-relaxed space-y-6 text-justify">
+                    {{ right_main_content }}
+                </div>
+            </main>
+        </div>
+
+        <!-- Mid-Breaker: 全宽玻璃区块 -->
+        <div class="grid grid-cols-3 gap-6 my-8">
+            {% for card in mid_cards %}
+            <div class="bg-white/40 border border-white p-6 rounded-2xl shadow-sm backdrop-blur-md">
+                <div class="w-10 h-10 bg-black rounded-lg flex items-center justify-center mb-4">
+                    <i class="fa-solid {{ card.icon }} text-white text-sm"></i>
+                </div>
+                <h4 class="eng-light text-[10px] text-gray-400 uppercase tracking-widest mb-1">Architecture</h4>
+                <p class="text-sm font-bold text-black">{{ card.text }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Dark Footer -->
+        <footer class="mt-auto -mx-16 -mb-16 h-32 bg-[#1F2937] flex items-center px-16 justify-between">
+            <div class="flex items-center gap-6">
+                <div class="w-12 h-12 rounded-full border border-gray-600 flex items-center justify-center">
+                    <i class="fa-solid fa- fingerprints text-[#e14444]"></i>
+                </div>
+                <div>
+                    <span class="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Final Statement</span>
+                    <p class="text-white text-base font-bold">{{ footer_statement }}</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="text-gray-400 text-[9px] max-w-sm leading-relaxed eng-light">
+                    Aesthetically refined for the digital ink. Built with advanced glassmorphism.
+                    The saturation of print meets the future of transparency.
+                </p>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>

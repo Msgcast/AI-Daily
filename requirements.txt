@@ -1,0 +1,25 @@
+# LangChain 核心
+langchain>=0.3.0
+langchain-openai>=0.2.0
+langchain-community>=0.3.0
+langgraph>=0.2.0
+langchain-google-genai>=1.0.0
+
+# RSS 抓取
+feedparser>=6.0.11
+
+# HTTP 请求
+httpx>=0.27.0
+requests>=2.31.0
+
+# 数据处理
+python-dateutil>=2.9.0
+
+# 浏览器自动化 (用于生图)
+playwright>=1.42.0
+
+# 环境变量
+python-dotenv>=1.0.0
+
+# 日志与格式化
+rich>=13.7.0
