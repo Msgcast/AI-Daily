@@ -126,5 +126,3 @@ python test_publish_only.py
 
 
 
-## License
-私有项目或内部使用请自行补充 License。
