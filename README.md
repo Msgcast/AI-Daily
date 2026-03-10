@@ -47,7 +47,7 @@ python -m playwright install
 ```
 
 ### 2) 配置环境变量
-在项目根目录创建 `.env`（不要提交到 GitHub），示例：
+在项目根目录创建 `.env`，示例：
 
 ```env
 # DeepSeek API
@@ -124,10 +124,7 @@ python test_publish_only.py
 ![AI 卡片示例 3](image/magazine_03.png)
 ![AI 卡片示例 4](image/magazine_04.png)
 
-## GitHub 上传前检查
-- 删除 `.env`、`cookies.json` 等含密钥/登录态文件
-- 建议添加 `.env.example`（仅保留变量名）
-- 若不希望提交生成图，可把 `image/` 加入 `.gitignore`
+
 
 ## License
 私有项目或内部使用请自行补充 License。
