@@ -1,0 +1,22 @@
+﻿# Environment
+.env
+
+# Secrets / cookies
+cookies.json
+xiaohongshu-mcp/cookies.json
+
+# Logs & reports
+*.log
+run_full_report.md
+run_no_publish_report.md
+
+# Python
+__pycache__/
+*.pyc
+
+# Playwright
+playwright/.local-browsers/
+
+# OS
+.DS_Store
+Thumbs.db
