@@ -1,133 +1,145 @@
 <!DOCTYPE html>
 <html lang="zh">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magazine V2 - High Density White</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Poppins:wght@300;400;600&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Playfair+Display:ital,wght@0,600;0,800;1,600&family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                        cjk: ['Noto Serif SC', 'serif'],
+                    },
+                    colors: {
+                        ink: {
+                            900: '#111111',
+                            700: '#333333',
+                            500: '#666666'
+                        },
+                        accent: '#D32F2F', // 沉稳的报刊红
+                        paper: '#FAFAFA' // 极浅的纸张灰白
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body {
-            font-family: 'Poppins', 'Noto Serif SC', serif;
-            background: radial-gradient(circle at 0% 0%, #fdfbfb 0%, #ebedee 100%);
-            -webkit-font-smoothing: antialiased;
+        body { 
+            background-color: #E0E0E0; 
+            -webkit-font-smoothing: antialiased; 
+            color: #111111;
         }
 
-        .aura-bg {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background:
-                radial-gradient(circle at 10% 20%, rgba(225, 68, 68, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 40%);
-            z-index: -1;
+        .paper-canvas {
+            background-color: theme('colors.paper');
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
 
-        .glass-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+        .border-main {
+            border: 4px solid theme('colors.ink.900');
         }
 
-        .giant-quote-outline {
-            font-family: 'Noto Serif SC', serif;
-            font-size: 160px;
-            color: transparent;
-            -webkit-text-stroke: 1px #E5E7EB;
-            line-height: 1;
+        .border-thin {
+            border: 1px solid theme('colors.ink.900');
         }
 
-        .serif-bold {
-            font-family: 'Noto Serif SC', serif;
-            font-weight: 900;
+        .drop-cap {
+            float: left;
+            font-size: 5rem;
+            line-height: 0.8;
+            padding-top: 4px;
+            padding-right: 16px;
+            font-family: 'Playfair Display', serif;
+            font-weight: 800;
         }
 
-        .eng-light {
-            font-family: 'Poppins', sans-serif;
-            font-weight: 300;
-        }
+        /* 控制过长的文本 */
+        .text-justify { text-align: justify; text-justify: inter-ideograph; }
     </style>
 </head>
-
-<body class="w-[1200px] h-[1450px] flex justify-center items-center p-12 relative overflow-hidden">
-    <div class="aura-bg"></div>
-
-    <!-- 主卡片 -->
-    <div class="w-full h-full glass-card rounded-[2rem] flex flex-col p-16 relative overflow-hidden">
-
-        <!-- Header: 专业刊头 -->
-        <header class="flex justify-between items-start mb-10 border-b border-gray-100 pb-8">
+<body class="w-[1200px] h-[1600px] flex items-center justify-center p-[30px] overflow-hidden">
+    
+    <!-- 主体画布 -->
+    <div class="w-full h-full paper-canvas flex flex-col border-[12px] border-ink-900 overflow-hidden relative p-[40px]">
+        
+        <!-- Header -->
+        <header class="flex justify-between items-end border-b-[6px] border-ink-900 pb-8 mb-12">
             <div class="flex flex-col">
-                <h1 class="text-black text-5xl font-black uppercase tracking-tighter">{{ header_title_en }}</h1>
-                <p class="eng-light text-gray-400 text-sm tracking-[0.3em] uppercase mt-2">{{ header_subtitle_en }}</p>
+                <span class="text-accent text-2xl font-bold tracking-[0.3em] uppercase mb-4">{{ header_subtitle_en | default('TECH INSIGHT') }}</span>
+                <h1 class="font-sans text-[72px] font-black uppercase tracking-tighter leading-none text-ink-900">
+                    {{ header_title_en | default('REDEFINE') }}
+                </h1>
             </div>
-            <div class="text-right">
-                <span class="text-xs font-bold text-gray-300 tracking-widest uppercase">/ {{ date }} /</span>
-                <div class="mt-2 h-1 w-full bg-[#e14444]"></div>
+            <div class="text-right flex flex-col items-end">
+                <div class="bg-ink-900 text-white px-6 py-2 text-xl font-bold tracking-widest uppercase mb-4">EDITION {{ version | default('02') }}</div>
+                <div class="text-ink-500 font-sans text-xl font-bold tracking-widest uppercase">{{ date }}</div>
             </div>
         </header>
 
-        <!-- Main Body: 4+8 -->
-        <div class="flex w-full mb-8">
-            <!-- 4 侧边栏: 视觉锚点 -->
-            <aside class="w-1/3 pr-12 relative">
-                <div class="giant-quote-outline opacity-60">“</div>
-                <p class="serif-bold text-3xl leading-tight text-black -mt-12 relative z-10">
-                    {{ left_philosophical_quote }}
-                </p>
-                <div class="mt-12 space-y-4">
-                    <div class="w-12 h-1 bg-black"></div>
+        <!-- 主内容区 -->
+        <main class="flex gap-16 flex-grow">
+            
+            <!-- 左侧边栏 (极客观点/引语) -->
+            <aside class="w-[38%] flex flex-col justify-between border-r-[3px] border-ink-900 pr-12 pb-12">
+                <div>
+                    <!-- 巨大的双引号 -->
+                    <div class="font-serif text-[180px] leading-[0.5] text-ink-900 opacity-20 -ml-4 mt-8 mb-6">“</div>
+                    <p class="font-cjk text-[46px] leading-[1.3] font-black text-ink-900 tracking-tight">
+                        {{ left_philosophical_quote | default('“千亿资本的降维打击。”') }}
+                    </p>
+                    <div class="w-24 h-[6px] bg-accent mt-10"></div>
+                </div>
+
+                <!-- 底部辅助说明 -->
+                <div class="mt-auto border-t-2 border-ink-900 pt-8">
+                    <span class="font-sans font-bold text-accent text-lg uppercase tracking-widest block mb-4">Strategic View</span>
+                    <p class="font-sans text-[22px] leading-[1.6] text-ink-700 font-medium">
+                        Focusing on high-density information delivery. Eliminating visual noise to highlight the industrial core context.
+                    </p>
                 </div>
             </aside>
 
-            <!-- 8 核心区: 紧凑布局 -->
-            <main class="w-2/3 pl-12 border-l border-white/50">
-                <h2 class="serif-bold text-4xl text-black mb-10 leading-snug">
+            <!-- 右侧正文区 -->
+            <article class="w-[62%] flex flex-col pt-4 pb-12">
+                <!-- 黑体巨型主标题 -->
+                <h2 class="font-cjk text-[64px] font-black leading-[1.2] tracking-tight mb-12 text-ink-900 border-b-4 border-ink-900 pb-8">
                     {{ right_main_title }}
                 </h2>
-                <div class="text-gray-700 text-xl leading-relaxed space-y-6 text-justify">
+
+                <!-- 正文内容 (大字号，高阅读性) -->
+                <div class="font-cjk text-[28px] leading-[1.9] text-justify font-medium text-ink-700 space-y-8 flex-grow">
                     {{ right_main_content }}
                 </div>
-            </main>
-        </div>
 
-        <!-- Mid-Breaker: 全宽玻璃区块 -->
-        <div class="grid grid-cols-3 gap-6 my-8">
+            </article>
+
+        </main>
+
+        <!-- 底部大卡片 (填充留白) -->
+        <div class="mt-8 border-[6px] border-ink-900 bg-white flex gap-0 divide-x-[6px] divide-ink-900 h-[280px]">
             {% for card in mid_cards %}
-            <div class="bg-white/40 border border-white p-6 rounded-2xl shadow-sm backdrop-blur-md">
-                <div class="w-10 h-10 bg-black rounded-lg flex items-center justify-center mb-4">
-                    <i class="fa-solid {{ card.icon }} text-white text-sm"></i>
+            <div class="flex-1 p-10 flex flex-col justify-center bg-paper/50 hover:bg-white transition-colors">
+                <div class="flex items-center gap-4 mb-6">
+                    <i class="fa-solid {{ card.icon }} text-accent text-3xl"></i>
+                    <span class="font-sans font-black text-ink-900 text-xl uppercase tracking-widest border-b-2 border-accent pb-1">KEY INSIGHT</span>
                 </div>
-                <h4 class="eng-light text-[10px] text-gray-400 uppercase tracking-widest mb-1">Architecture</h4>
-                <p class="text-sm font-bold text-black">{{ card.text }}</p>
+                <p class="font-cjk text-[26px] font-bold leading-[1.6] text-ink-900">{{ card.text }}</p>
             </div>
             {% endfor %}
         </div>
 
-        <!-- Dark Footer -->
-        <footer class="mt-auto -mx-16 -mb-16 h-32 bg-[#1F2937] flex items-center px-16 justify-between">
-            <div class="flex items-center gap-6">
-                <div class="w-12 h-12 rounded-full border border-gray-600 flex items-center justify-center">
-                    <i class="fa-solid fa- fingerprints text-[#e14444]"></i>
-                </div>
-                <div>
-                    <span class="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Final Statement</span>
-                    <p class="text-white text-base font-bold">{{ footer_statement }}</p>
-                </div>
-            </div>
-            <div class="text-right">
-                <p class="text-gray-400 text-[9px] max-w-sm leading-relaxed eng-light">
-                    Aesthetically refined for the digital ink. Built with advanced glassmorphism.
-                    The saturation of print meets the future of transparency.
-                </p>
-            </div>
-        </footer>
-    </div>
-</body>
+        <!-- 绝对定位的页面装饰 -->
+        <div class="absolute bottom-[30px] right-[40px] bg-accent text-white px-4 py-1 text-sm font-bold tracking-widest uppercase shadow-lg">
+            {{ footer_statement | default('END OF REPORT') }}
+        </div>
 
+    </div>
+
+</body>
 </html>

@@ -45,9 +45,13 @@ class AgentState(TypedDict):
     # ── Node 5: 小红书文案 输出 ──
     xhs_post: dict                           # 小红书文案结构 (title, content, tags)
     card_data_list: list[dict]               # 每一页卡片对应的结构化填充数据 (3-5页)
+    generated_html_list: list[str]           # (NEW) Generative UI 产生的完整 HTML 源文件内容
     
     # ── Node 6: Playwright 截图 输出 ──
     images: list[str]                        # 本地存放的截图路径列表
+
+    # ── Reddit 专题数据 (NEW) ──
+    reddit_submission: Optional[dict]        # Reddit 抓取到的原始数据 (+评论)
 
     # ── 流程控制 ──
     error_log: Optional[str]                 # 异常记录

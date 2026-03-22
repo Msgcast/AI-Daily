@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --reddit-orange: #FF4500;
+            --reddit-bg: #DAE0E6;
+        }
+        /* 封面模拟设计 */
+        .reddit-mock-card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.1);
+            padding: 24px;
+            width: 850px;
+            font-family: 'Inter', sans-serif;
+        }
+        .mock-meta { display: flex; align-items: center; gap: 8px; color: #7c7c7c; font-size: 18px; }
+        .mock-title { font-size: 34px; font-weight: 800; color: #1a1a1b; line-height: 1.2; margin-top: 12px; }
+        .mock-stats { display: flex; align-items: center; gap: 20px; color: #878a8c; font-size: 20px; margin-top: 24px; border-top: 1px solid #f6f7f8; padding-top: 16px; }
+        
+        /* 正文卡片缩放 */
+        .content-en { font-size: 38px; line-height: 1.4; color: #1a1a1b; font-weight: 600; text-align: justify; }
+        .content-cn { font-size: 44px; line-height: 1.5; color: #FF4500; font-weight: 900; text-align: justify; }
+    </style>
+</head>
+<body class="w-[1200px] h-[1600px] flex justify-center items-center overflow-hidden p-[60px]">
+
+    {% if is_title_page %}
+    <!-- ============================== 爆款封面页 (带 Reddit 模拟卡片) ============================== -->
+    <div class="w-full h-full bg-white relative flex flex-col overflow-hidden">
+        
+        <!-- Top: 橙色品牌区 (占 40%) -->
+        <div class="w-full h-[45%] bg-[#FF4500] flex flex-col items-center justify-center p-12 text-white shrink-0">
+            <div class="flex items-center gap-4 mb-8">
+                <i class="fa-brands fa-reddit text-[80px]"></i>
+                <span class="text-[44px] font-black tracking-tight">reddit <span class="font-light opacity-80 pl-2">高赞问答</span></span>
+            </div>
+            <h1 class="text-[82px] font-black leading-[1.2] text-center tracking-tight drop-shadow-lg">
+                {{ title_cn }}
+            </h1>
+        </div>
+
+        <!-- Bottom: 模拟真实卡片区 (占 60%) -->
+        <div class="w-full h-[55%] bg-[#F0F2F5] flex items-center justify-center p-20 relative">
+            <!-- 真实 UI 模拟卡片 -->
+            <div class="reddit-mock-card">
+                <!-- Meta Info -->
+                <div class="flex justify-between items-center mb-4">
+                    <div class="mock-meta">
+                        <i class="fa-brands fa-reddit-alien text-orange-600 text-2xl"></i>
+                        <span class="font-bold text-black opacity-80">r/AskReddit</span>
+                        <span>• 12h ago</span>
+                        <span class="bg-gray-100 px-2 py-0.5 rounded text-[14px]">Posted by u/sageagios</span>
+                    </div>
+                    <i class="fa-solid fa-ellipsis text-gray-400"></i>
+                </div>
+                
+                <!-- Topic Title (English) -->
+                <div class="mock-title">
+                    {{ title_en }}
+                </div>
+                
+                <!-- Mockup Stats Bar -->
+                <div class="flex items-center justify-between mt-10">
+                    <div class="flex items-center bg-[#F6F7F8] px-4 py-2 rounded-full gap-4">
+                        <i class="fa-solid fa-arrow-up text-orange-600"></i>
+                        <span class="font-black text-xl text-gray-700">18.5K</span>
+                        <i class="fa-solid fa-arrow-down text-gray-400"></i>
+                    </div>
+                    
+                    <div class="flex items-center gap-6 text-gray-500 font-bold">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-regular fa-message"></i>
+                            <span>12.4K Comments</span>
+                        </div>
+                        <i class="fa-solid fa-share-nodes"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 修饰装饰: 提示"爆火讨论" -->
+            <div class="absolute top-10 left-1/2 -translate-x-1/2 bg-black text-white px-8 py-3 rounded-full text-2xl font-bold shadow-2xl flex items-center gap-3">
+                <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                正在热议中...
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- ============================== 正文评论页模版 ============================== -->
+    <div class="w-full h-full bg-[#FF4500] relative flex flex-col p-[30px]">
+        
+        <!-- 白色圆角容器 -->
+        <div class="w-full h-full bg-white rounded-[40px] card-shadow flex flex-col p-10 relative overflow-hidden">
+            
+            <!-- Header: 用户信息 & 楼层 -->
+            <div class="flex justify-between items-center mb-6 shrink-0">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                        {{ user_name[2]|upper if user_name else '#' }}
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-[28px] font-bold text-gray-800 tracking-tight leading-tight">{{ user_name }}</span>
+                        <span class="text-[18px] text-gray-400 font-medium italic">Top Contributor</span>
+                    </div>
+                </div>
+                <div class="bg-[#FF4500] text-white px-5 py-1.5 rounded-full text-[22px] font-black italic">
+                    #{{ badge_number if badge_number else '1' }}
+                </div>
+            </div>
+
+            <!-- Content Area: 核心内容区域，高度自伸缩 -->
+            <div class="flex-grow flex flex-col justify-center space-y-8 overflow-hidden">
+                <!-- 英文原文 -->
+                <div class="content-en">
+                    {{ original_text }}
+                </div>
+
+                <!-- 分割线: 极简点缀 -->
+                <div class="flex items-center gap-4">
+                    <div class="flex-grow h-[1px] bg-gray-100"></div>
+                    <div class="w-2 h-2 rounded-full bg-orange-200"></div>
+                    <div class="flex-grow h-[1px] bg-gray-100"></div>
+                </div>
+
+                <!-- 中文翻译 -->
+                <div class="content-cn">
+                    {{ translated_text }}
+                </div>
+            </div>
+
+            <!-- Footer: 底部互动保持简洁，且不遮挡文字 -->
+            <div class="mt-8 pt-6 border-t border-gray-100 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-up text-[#FF4500] text-2xl"></i>
+                    <span class="text-[38px] font-black text-[#FF4500] tracking-tighter">{{ score }}</span>
+                    <span class="text-[22px] text-gray-400 font-bold ml-1">UPVOTES</span>
+                </div>
+                <div class="text-gray-200 text-sm font-bold tracking-widest">REDDIT INSIGHTS</div>
+            </div>
+
+            <!-- 修饰水印: 极其微弱，置于底层 -->
+            <div class="absolute -right-20 -bottom-20 opacity-[0.02] rotate-12 pointer-events-none">
+                <i class="fa-brands fa-reddit text-[500px]"></i>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</body>
+</html>

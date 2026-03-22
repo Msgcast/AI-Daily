@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 资讯智能体 // Dashboard</title>
+    <meta name="description" content="AI 资讯智能体后台管理 — 总览仪表盘">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <link rel="stylesheet" href="/assets/main.css">
+</head>
+<body>
+<canvas id="webgl-bg"></canvas>
+
+<div class="tech-label tech-label-tl">SYS.CORE // ON-LINE</div>
+<div class="tech-label tech-label-bl">AGENT_DASHBOARD_V1.0_</div>
+
+<div class="app-shell">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            AI.AGENT
+            <span>资讯日报系统</span>
+        </div>
+        <div class="nav-label">导航</div>
+        <a href="/dashboard.html" class="nav-item active" id="nav-dashboard">
+            <i class="ph ph-squares-four"></i> Dashboard
+        </a>
+        <a href="/publish.html" class="nav-item" id="nav-publish">
+            <i class="ph ph-rocket-launch"></i> 发布控制台
+        </a>
+        <a href="/records.html" class="nav-item" id="nav-records">
+            <i class="ph ph-newspaper"></i> 稿件查看
+        </a>
+        <a href="/sources.html" class="nav-item" id="nav-sources">
+            <i class="ph ph-rss"></i> 数据源配置
+        </a>
+
+        <div class="sidebar-bottom">
+            <button class="theme-toggle" id="themeToggleBtn">
+                <i class="ph ph-moon"></i>
+                <span>DARK</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+        <div class="top-bar">
+            <div>
+                <h1 class="page-title">Dashboard</h1>
+                <p class="page-subtitle">实时概览 · 今日 AI 资讯运行状态</p>
+            </div>
+            <div class="top-bar-actions">
+                <!-- Actions moved to pipeline cards -->
+            </div>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="grid-4 mb-xl" id="stats-grid">
+            <div class="card card-sm stat-card">
+                <div class="stat-label">总运行次数</div>
+                <div class="stat-value" id="stat-total">—</div>
+                <div class="stat-sub">自系统启动</div>
+            </div>
+            <div class="card card-sm stat-card">
+                <div class="stat-label">成功发布</div>
+                <div class="stat-value" id="stat-success" style="color:var(--color-success)">—</div>
+                <div class="stat-sub">发布成功稿件</div>
+            </div>
+            <div class="card card-sm stat-card">
+                <div class="stat-label">失败次数</div>
+                <div class="stat-value" id="stat-failed" style="color:var(--color-error)">—</div>
+                <div class="stat-sub">需要检查日志</div>
+            </div>
+            <div class="card card-sm stat-card">
+                <div class="stat-label">运行中</div>
+                <div class="stat-value" id="stat-running" style="color:#818cf8">—</div>
+                <div class="stat-sub">当前进行中</div>
+            </div>
+        </div>
+
+        <div class="grid-2 mb-xl">
+            <!-- API Resource Quota -->
+            <div class="card card-sm" style="display:flex; flex-direction:column; justify-content:center; padding: 24px 32px; min-height:120px; border-left: 1px solid var(--text-tech)">
+                <div class="flex items-center justify-between mb-sm">
+                    <h2 style="font-size:12px; font-weight:700; font-family:'Playfair Display',serif; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-secondary)">DeepSeek API Balance</h2>
+                    <span class="badge" id="ds-status-badge" style="font-size:9px">CHECKING...</span>
+                </div>
+                <div class="flex items-end gap-sm">
+                    <div id="ds-balance-value" style="font-size:48px; font-weight:900; font-family:'Playfair Display',serif; line-height:1; color:var(--text-primary)">...</div>
+                    <div class="text-tech" id="ds-currency" style="margin-bottom:6px; font-size:14px; font-weight:700">CNY</div>
+                </div>
+            </div>
+
+            <!-- XHS Account Status -->
+            <div class="card card-sm" style="display:flex; flex-direction:column; justify-content:center; padding: 24px 32px; min-height:120px; border-right: 1px solid var(--text-tech)">
+                <div class="flex items-center justify-between mb-sm">
+                    <h2 style="font-size:12px; font-weight:700; font-family:'Playfair Display',serif; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-secondary)">Xiaohongshu Status</h2>
+                    <div class="flex items-center gap-sm">
+                        <button class="btn-icon btn-sm" id="btn-refresh-xhs" title="验证状态" style="width:24px; height:24px; font-size:12px; border-radius:4px; background:var(--bg-surface-2)">
+                            <i class="ph ph-arrows-clockwise"></i>
+                        </button>
+                        <span class="badge" id="xhs-status-badge" style="font-size:9px">CONNECTING...</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-md">
+                    <div id="xhs-user-name" style="font-size:24px; font-weight:900; font-family:'Playfair Display',serif; color:var(--text-primary)">...</div>
+                    <div class="text-tech" style="font-size:11px; margin-top:4px">PROFILE</div>
+                </div>
+                <div class="text-secondary text-xs mt-xs" id="xhs-status-msg">账号登录有效性验证</div>
+            </div>
+        </div>
+
+        <!-- Core Pipelines (Minimal Vintage Style) -->
+        <div class="grid-2 mb-xl">
+            <!-- Pipeline: AI News -->
+            <div class="pipeline-card">
+                <div class="type-tag">Pipeline // News</div>
+                <h2>每日 AI 资讯</h2>
+                <p>全量巡检 20+ RSS 源，DeepSeek 智能筛选，生成行业级深度日报。</p>
+                <button class="action-btn" id="btn-run-news">
+                    <i class="ph ph-rocket-launch"></i> 立即执行 AI 资讯发布
+                </button>
+            </div>
+
+            <!-- Pipeline: Reddit -->
+            <div class="pipeline-card reddit-theme">
+                <div class="type-tag">Pipeline // Reddit</div>
+                <h2>Reddit 热议</h2>
+                <p>锁定 Reddit 全球热榜，AI 翻译原生对话，生成全真 UI 视觉卡片。</p>
+                <button class="action-btn" id="btn-run-reddit">
+                    <i class="ph ph-lightning"></i> 立即执行 REDDIT 发布
+                </button>
+            </div>
+        </div>
+
+        <div class="grid-2 mb-xl">
+            <!-- Recent Records -->
+            <div class="card">
+                <div class="flex items-center justify-between mb-lg">
+                    <h2 style="font-size:16px;font-weight:700;font-family:'Playfair Display',serif">最近运行记录</h2>
+                    <a href="/records.html" class="btn btn-ghost btn-sm">查看全部 <i class="ph ph-arrow-right"></i></a>
+                </div>
+                <div id="recent-records">
+                    <div class="text-secondary text-sm" style="padding:20px 0;text-align:center">加载中...</div>
+                </div>
+            </div>
+
+            <!-- Schedule Status -->
+            <div class="card">
+                <h2 style="font-size:16px;font-weight:700;font-family:'Playfair Display',serif;margin-bottom:var(--space-lg)">定时任务状态</h2>
+                <div id="schedule-status">
+                    <div class="text-secondary text-sm">加载中...</div>
+                </div>
+                <a href="/publish.html#schedule" class="btn btn-ghost btn-sm" style="margin-top:var(--space-md)">
+                    管理定时任务 <i class="ph ph-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Running task log preview -->
+        <div class="card" id="live-log-card" style="display:none">
+            <div class="flex items-center justify-between mb-lg">
+                <div class="flex items-center gap-md">
+                    <span class="badge badge-running"><span class="status-dot dot-running"></span> 运行中</span>
+                    <span class="text-sm text-secondary font-mono" id="live-task-id"></span>
+                </div>
+                <button class="btn btn-ghost btn-sm" id="btn-stop-log">关闭日志</button>
+            </div>
+            <div class="log-terminal" id="live-log-output"></div>
+        </div>
+    </main>
+</div>
+
+<div id="toast-container"></div>
+
+<script type="module">
+    import { api, initTheme, initWebGL, streamLog, toast, fmtDate, statusBadge } from '/assets/api.js';
+
+    initTheme('themeToggleBtn');
+    const glState = initWebGL('webgl-bg');
+
+    // Update WebGL colors when theme changes
+    document.getElementById('themeToggleBtn').addEventListener('click', () => {
+        setTimeout(() => {
+            if (glState?.material) {
+                const c = glState.getColors();
+                const theme = document.documentElement.getAttribute('data-theme');
+                glState.material.uniforms.u_colorCore.value = c.core;
+                glState.material.uniforms.u_colorFringe.value = c.fringe;
+                glState.material.uniforms.u_isLightMode.value = theme === 'light' ? 1.0 : 0.0;
+            }
+        }, 50);
+    });
+
+    async function loadStats() {
+        try {
+            const s = await api.getStats();
+            document.getElementById('stat-total').textContent = s.total;
+            document.getElementById('stat-success').textContent = s.success;
+            document.getElementById('stat-failed').textContent = s.failed;
+            document.getElementById('stat-running').textContent = s.running;
+
+            // 自动恢复日志流：如果本地存储有进行的任务，且状态是运行中
+            const activeId = localStorage.getItem('active_task_id');
+            if (activeId && s.running > 0 && !currentEs) {
+                api.getRunStatus(activeId).then(st => {
+                    if (st.status === 'running') reconnectLog(activeId);
+                }).catch(() => localStorage.removeItem('active_task_id'));
+            }
+        } catch (e) { /* silent */ }
+    }
+
+    async function loadRecent() {
+        try {
+            const records = await api.getRecords(1);
+            const el = document.getElementById('recent-records');
+            if (!records.length) {
+                el.innerHTML = '<div class="text-secondary text-sm" style="padding:20px 0;text-align:center">暂无运行记录</div>';
+                return;
+            }
+            el.innerHTML = records.slice(0, 5).map(r => {
+                let modeLabel = r.mode === 'reddit_hot' ? '🔥 Reddit' : '📰 AI资讯';
+                return `
+                <div class="schedule-item" style="gap:12px">
+                    <div style="flex:1;min-width:0">
+                        <div class="truncate" style="font-size:13px;font-weight:500">
+                            <span class="text-tech" style="font-size:10px; opacity: 0.7;">[${modeLabel}]</span> 
+                            ${r.xhs_title || '全链路处理中...'}
+                        </div>
+                        <div class="text-tech" style="font-size:10px;margin-top:2px">${fmtDate(r.started_at)}</div>
+                    </div>
+                    ${statusBadge(r.status)}
+                </div>
+                `;
+            }).join('');
+        } catch (e) { /* silent */ }
+    }
+
+    async function loadSchedule() {
+        try {
+            const jobs = await api.getJobs();
+            const el = document.getElementById('schedule-status');
+            if (!jobs.length) {
+                el.innerHTML = '<div class="text-secondary text-sm">未配置定时任务</div>';
+                return;
+            }
+            el.innerHTML = jobs.map(j => `
+                <div class="flex items-center justify-between" style="margin-bottom:8px">
+                    <div>
+                        <div style="font-size:13px;font-weight:500">${j.name}</div>
+                        <div class="text-tech" style="font-size:10px">${j.cron_expr || `每 ${j.interval_hours}h`} · 下次: ${j.next_run ? fmtDate(j.next_run) : '—'}</div>
+                    </div>
+                    <span class="badge ${j.enabled ? 'badge-success' : ''}">${j.enabled ? 'ON' : 'OFF'}</span>
+                </div>
+            `).join('');
+        } catch (e) { /* silent */ }
+    }
+
+    async function loadDeepSeekStats() {
+        const valEl = document.getElementById('ds-balance-value');
+        const badgeEl = document.getElementById('ds-status-badge');
+        const currEl = document.getElementById('ds-currency');
+        try {
+            const data = await api.getDeepSeekBalance();
+            if (data.is_available && data.balance_infos?.length) {
+                const info = data.balance_infos[0];
+                valEl.textContent = parseFloat(info.total_balance).toFixed(2);
+                currEl.textContent = info.currency;
+                badgeEl.textContent = 'ACTIVE';
+                badgeEl.className = 'badge badge-success';
+            } else {
+                badgeEl.textContent = 'ERROR';
+                badgeEl.className = 'badge badge-error';
+            }
+        } catch (e) {
+            badgeEl.textContent = 'OFFLINE';
+            badgeEl.className = 'badge';
+            console.error(e);
+        }
+    }
+
+    async function loadXHSStatus() {
+        const badgeEl = document.getElementById('xhs-status-badge');
+        const userEl = document.getElementById('xhs-user-name');
+        const msgEl = document.getElementById('xhs-status-msg');
+        const btn = document.getElementById('btn-refresh-xhs');
+        
+        btn.classList.add('ph-spin'); // 临时旋转动画
+        badgeEl.textContent = 'CHECKING...';
+        
+        try {
+            const data = await api.getXHSStatus();
+            if (data.is_logged_in) {
+                badgeEl.textContent = 'LOGGED IN';
+                badgeEl.className = 'badge badge-success';
+                userEl.textContent = data.user_name || '已登录';
+                msgEl.textContent = '发布权限正常';
+                if (data.raw_status) {
+                     // 如果 raw_status 太长，只取后面部分
+                     const brief = data.raw_status.length > 25 ? "验证接口返回: 可用" : data.raw_status;
+                     msgEl.textContent = brief;
+                }
+            } else {
+                badgeEl.textContent = 'NOT LOGGED IN';
+                badgeEl.className = 'badge badge-error';
+                userEl.textContent = 'GUEST';
+                msgEl.textContent = data.error || '登录失效';
+            }
+        } catch (e) {
+            badgeEl.textContent = 'DISCONNECTED';
+            badgeEl.className = 'badge';
+            userEl.textContent = '---';
+        } finally {
+            btn.classList.remove('ph-spin');
+        }
+    }
+
+    document.getElementById('btn-refresh-xhs').addEventListener('click', loadXHSStatus);
+
+    let currentEs = null;
+
+    function reconnectLog(taskId) {
+        const card = document.getElementById('live-log-card');
+        const logEl = document.getElementById('live-log-output');
+        const taskIdEl = document.getElementById('live-task-id');
+        card.style.display = 'block';
+        taskIdEl.textContent = taskId;
+
+        if (currentEs) currentEs.close();
+        currentEs = streamLog(taskId,
+            (line) => {
+                const div = document.createElement('div');
+                div.className = line.includes('ERROR') ? 'log-line-error' :
+                                line.includes('✅')   ? 'log-line-success' :
+                                line.includes('WARNING') ? 'log-line-warn' : 'log-line-info';
+                div.textContent = line;
+                logEl.appendChild(div);
+                logEl.scrollTop = logEl.scrollHeight;
+            },
+            () => { 
+                localStorage.removeItem('active_task_id');
+                loadStats(); loadRecent(); toast('任务完成', 'success'); 
+            }
+        );
+    }
+
+    function startRun(topic) {
+        const card = document.getElementById('live-log-card');
+        const logEl = document.getElementById('live-log-output');
+        const taskIdEl = document.getElementById('live-task-id');
+        card.style.display = 'block';
+        logEl.innerHTML = '<div class="log-line-info">🚀 正在启动全链路 Pipeline...</div>';
+        taskIdEl.textContent = '初始化...';
+
+        const runFn = topic === 'reddit' ? () => api.runReddit() : () => api.runNews();
+        runFn().then(r => {
+            localStorage.setItem('active_task_id', r.task_id);
+            taskIdEl.textContent = r.task_id.slice(0, 12) + '...';
+            toast(`${r.label} 任务已启动`, 'info');
+            reconnectLog(r.task_id);
+        }).catch(e => toast(e.message, 'error'));
+    }
+
+    document.getElementById('btn-run-news').addEventListener('click', () => startRun('news'));
+    document.getElementById('btn-run-reddit').addEventListener('click', () => startRun('reddit'));
+    document.getElementById('btn-stop-log').addEventListener('click', () => {
+        if (currentEs) currentEs.close();
+        document.getElementById('live-log-card').style.display = 'none';
+    });
+
+    loadStats();
+    loadRecent();
+    loadSchedule();
+    loadDeepSeekStats();
+    loadXHSStatus();
+    setInterval(() => { 
+        loadStats(); 
+        loadRecent(); 
+        loadDeepSeekStats();
+        // 小红书改为手动验证，不在定时循环中消耗资源
+    }, 30000);
+</script>
+</body>
+</html>

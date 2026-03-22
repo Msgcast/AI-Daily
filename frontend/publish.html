@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 资讯智能体 // 发布控制台</title>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <link rel="stylesheet" href="/assets/main.css">
+</head>
+<body>
+<canvas id="webgl-bg"></canvas>
+<div class="tech-label tech-label-tl">SYS.CORE // PUBLISH_CTL</div>
+<div class="tech-label tech-label-bl">PIPELINE_MANAGER_V1.0_</div>
+
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-brand">AI.AGENT<span>资讯日报系统</span></div>
+        <div class="nav-label">导航</div>
+        <a href="/dashboard.html" class="nav-item"><i class="ph ph-squares-four"></i> Dashboard</a>
+        <a href="/publish.html"   class="nav-item active"><i class="ph ph-rocket-launch"></i> 发布控制台</a>
+        <a href="/records.html"   class="nav-item"><i class="ph ph-newspaper"></i> 稿件查看</a>
+        <a href="/sources.html"   class="nav-item"><i class="ph ph-rss"></i> 数据源配置</a>
+        <div class="sidebar-bottom">
+            <button class="theme-toggle" id="themeToggleBtn"><i class="ph ph-moon"></i><span>DARK</span></button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="top-bar">
+            <div>
+                <h1 class="page-title">任务调度中心</h1>
+                <p class="page-subtitle">PIPELINE CONTROL // 专题流水线与自动化任务管理</p>
+            </div>
+        </div>
+
+        <div class="grid-2 mb-xl">
+            <!-- Main Entry Cards -->
+            <div class="card publish-hero-card" id="card-news" style="border-left: 4px solid var(--color-primary);">
+                <div class="flex-col gap-md">
+                    <div class="badge" style="width: fit-content;">PIPELINE // NEWS</div>
+                    <h2 style="font-size:22px; font-weight:700;">每日 AI 资讯</h2>
+                    <p class="text-secondary text-sm">全量巡检 20+ RSS 源，DeepSeek 智能筛选，生成行业级深度日报。</p>
+                    <button class="btn btn-primary" id="btn-run-news" style="margin-top: 10px; height: 50px;">
+                        <i class="ph ph-rocket-launch"></i> 立即执行 AI 资讯发布
+                    </button>
+                </div>
+            </div>
+
+            <div class="card publish-hero-card" id="card-reddit" style="border-left: 4px solid #FF4500;">
+                <div class="flex-col gap-md">
+                    <div class="badge" style="width: fit-content; background: #FF4500;">PIPELINE // REDDIT</div>
+                    <h2 style="font-size:22px; font-weight:700;">Reddit 热议</h2>
+                    <p class="text-secondary text-sm">锁定 Reddit 全球热榜，AI 翻译原生对话，生成全真 UI 视觉卡片。</p>
+                    <button class="btn btn-primary" id="btn-run-reddit" style="margin-top: 10px; height: 50px; background: #FF4500; border-color: #FF4500;">
+                        <i class="ph ph-fire"></i> 立即执行 Reddit 发布
+                    </button>
+                </div>
+            </div>
+
+            <!-- Log Panel -->
+            <div class="card" style="grid-column: span 2; display:flex;flex-direction:column;gap:var(--space-md)">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-md">
+                        <div class="badge" id="log-status-badge">IDLE</div>
+                        <span class="font-mono text-tech" id="log-task-id" style="font-size:10px"></span>
+                    </div>
+                    <button class="btn btn-ghost btn-sm" id="btn-clear-log">清空日志</button>
+                </div>
+                <div class="log-terminal" id="log-output" style="flex:1;min-height:300px">等待任务启动...</div>
+            </div>
+        </div>
+
+
+        <!-- Schedule Section -->
+        <div class="card" id="schedule">
+            <div class="flex items-center justify-between mb-lg">
+                <div>
+                    <div class="badge mb-sm">SCHEDULER</div>
+                    <h2 style="font-size:16px;font-weight:900;font-family:'Playfair Display',serif">定时发布计划</h2>
+                    <p class="text-secondary text-sm" style="margin-top:4px">配置 Cron 表达式或固定间隔，自动触发流水线运行</p>
+                </div>
+                <button class="btn btn-secondary" id="btn-add-schedule">
+                    <i class="ph ph-plus"></i> 新增任务
+                </button>
+            </div>
+
+            <div id="schedule-list">
+                <div class="text-secondary text-sm" style="text-align:center;padding:20px">加载中...</div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Add Schedule Modal -->
+<div class="modal-overlay" id="schedule-modal">
+    <div class="modal">
+        <div class="flex items-center justify-between mb-lg">
+            <h2 style="font-size:24px;font-weight:900;font-family:'Playfair Display',serif">新增定时任务</h2>
+            <button class="btn-icon" id="btn-close-schedule-modal"><i class="ph ph-x"></i></button>
+        </div>
+
+        <div class="flex-col gap-md">
+            <div class="input-group">
+                <label class="input-label">任务名称</label>
+                <input type="text" class="input-field" id="sch-name" placeholder="例如：每日上午 Reddit">
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">发布专题</label>
+                <select class="input-field" id="sch-topic" style="background: var(--card-bg)">
+                    <option value="daily_news">每日 AI 资讯</option>
+                    <option value="reddit_hot">Reddit 热议</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">每日执行时间</label>
+                <div class="flex items-center gap-md">
+                    <select class="input-field" id="sch-hour" style="width: 100px; background: var(--card-bg)">
+                        <option value="0">00</option><option value="1">01</option><option value="2">02</option><option value="3">03</option><option value="4">04</option><option value="5">05</option><option value="6">06</option><option value="7">07</option><option value="8" selected>08</option><option value="9">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option>
+                    </select>
+                    <span style="font-weight: bold; font-size: 18px;">:</span>
+                    <select class="input-field" id="sch-minute" style="width: 100px; background: var(--card-bg)">
+                        <option value="0">00</option>
+                        <option value="5">05</option>
+                        <option value="10">10</option>
+                        <option value="15">15</option>
+                        <option value="20">20</option>
+                        <option value="25">25</option>
+                        <option value="30" selected>30</option>
+                        <option value="35">35</option>
+                        <option value="40">40</option>
+                        <option value="45">45</option>
+                        <option value="50">50</option>
+                        <option value="55">55</option>
+                    </select>
+                </div>
+                <p class="text-secondary text-xs" style="margin-top: 8px;">系统将每天在设定时间准时触发发布流水线。</p>
+            </div>
+        </div>
+
+        <div style="margin-top:var(--space-xl);display:flex;gap:var(--space-md)">
+            <button class="btn btn-primary" id="btn-save-schedule" style="flex:1">
+                <i class="ph ph-check"></i> SAVE SCHEDULE
+            </button>
+            <button class="btn btn-ghost" id="btn-cancel-schedule">取消</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script type="module">
+    import { api, initTheme, initWebGL, streamLog, toast, fmtDate } from '/assets/api.js';
+
+    initTheme('themeToggleBtn');
+    initWebGL('webgl-bg');
+
+    let currentEs = null; // Declare currentEs here
+
+    const logEl = document.getElementById('log-output');
+    const logBadge = document.getElementById('log-status-badge');
+    const logTaskId = document.getElementById('log-task-id');
+
+    async function reconnectLog(taskId) {
+        logBadge.className = 'badge badge-running';
+        logBadge.textContent = '⟳ RUNNING';
+        logTaskId.textContent = taskId.slice(0, 12) + '...';
+
+        if (currentEs) currentEs.close();
+        currentEs = streamLog(taskId,
+            (line) => {
+                const div = document.createElement('div');
+                div.className = line.includes('ERROR') ? 'log-line-error' :
+                                line.includes('✅')   ? 'log-line-success' :
+                                line.includes('WARNING') ? 'log-line-warn' : 'log-line-info';
+                div.textContent = line;
+                logEl.appendChild(div);
+                logEl.scrollTop = logEl.scrollHeight;
+            },
+            () => {
+                localStorage.removeItem('active_task_id');
+                logBadge.className = 'badge badge-success';
+                logBadge.textContent = '✓ DONE';
+                toast('流程执行完毕', 'success');
+            }
+        );
+    }
+
+    async function startTask(topic) {
+        logEl.innerHTML = '<div class="log-line-info">🚀 正在启动全链路 Pipeline...</div>';
+        const fn = topic === 'reddit' ? () => api.runReddit() : () => api.runNews();
+        
+        try {
+            const r = await fn();
+            localStorage.setItem('active_task_id', r.task_id);
+            toast(`${r.label} 任务已启动`, 'info');
+            reconnectLog(r.task_id);
+        } catch (e) {
+            logBadge.className = 'badge badge-error';
+            logBadge.textContent = '✗ ERROR';
+            toast(e.message, 'error');
+        }
+    }
+
+    document.getElementById('btn-run-news').addEventListener('click', () => startTask('news'));
+    document.getElementById('btn-run-reddit').addEventListener('click', () => startTask('reddit'));
+    document.getElementById('btn-clear-log').addEventListener('click', () => { logEl.innerHTML = ''; });
+
+    // 初始化检查
+    window.addEventListener('DOMContentLoaded', async () => {
+        loadSchedule();
+        const activeId = localStorage.getItem('active_task_id');
+        if (activeId) {
+            try {
+                const st = await api.getRunStatus(activeId);
+                if (st.status === 'running') reconnectLog(activeId);
+                else localStorage.removeItem('active_task_id');
+            } catch (e) { localStorage.removeItem('active_task_id'); }
+        }
+    });
+
+    // Schedule
+    async function loadSchedule() {
+        const el = document.getElementById('schedule-list');
+        try {
+            const jobs = await api.getJobs();
+            if (!jobs.length) {
+                el.innerHTML = '<div class="text-secondary text-sm" style="text-align:center;padding:20px">暂无定时任务，点击「新增任务」创建</div>';
+                return;
+            }
+            el.innerHTML = jobs.map(j => `
+                <div class="schedule-item">
+                    <div style="flex:1;min-width:0">
+                        <div style="font-weight:600;font-size:14px">
+                            ${j.name} 
+                            <span class="text-tech" style="font-size:10px; font-weight: normal; margin-left: 8px; opacity: 0.6;">
+                                (${j.topic === 'reddit_hot' ? 'Reddit' : 'AI资讯'})
+                            </span>
+                        </div>
+                        <div class="text-tech" style="font-size:10px;margin-top:2px">
+                            ⏰ 每日 ${j.cron_expr ? j.cron_expr.split(' ').slice(1, 3).reverse().map(num => String(num).padStart(2, '0')).join(':') : '—'}
+                            &nbsp;·&nbsp; 上次: ${j.last_run ? fmtDate(j.last_run) : '—'}
+                            &nbsp;·&nbsp; 下次: ${j.next_run ? fmtDate(j.next_run) : '—'}
+                        </div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" ${j.enabled ? 'checked' : ''} data-jid="${j.job_id}" class="sch-toggle">
+                        <span class="toggle-track"></span>
+                    </label>
+                    <button class="btn-icon btn-danger btn-sm" data-jid="${j.job_id}" title="删除">
+                        <i class="ph ph-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            el.querySelectorAll('.sch-toggle').forEach(cb => {
+                cb.addEventListener('change', async () => {
+                    await api.toggleJob(cb.dataset.jid);
+                    toast('状态已更新', 'success');
+                    loadSchedule();
+                });
+            });
+            el.querySelectorAll('.btn-danger').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    if (!confirm('确认删除该定时任务？')) return;
+                    await api.deleteJob(btn.dataset.jid);
+                    toast('已删除', 'success');
+                    loadSchedule();
+                });
+            });
+        } catch (e) {
+            el.innerHTML = `<div class="text-secondary text-sm">加载失败: ${e.message}</div>`;
+        }
+    }
+
+    // Schedule Modal
+    const modal = document.getElementById('schedule-modal');
+    document.getElementById('btn-add-schedule').addEventListener('click', () => modal.classList.add('show'));
+    document.getElementById('btn-close-schedule-modal').addEventListener('click', () => modal.classList.remove('show'));
+    document.getElementById('btn-cancel-schedule').addEventListener('click', () => modal.classList.remove('show'));
+
+
+    document.getElementById('btn-save-schedule').addEventListener('click', async () => {
+        const name = document.getElementById('sch-name').value.trim();
+        const topic = document.getElementById('sch-topic').value;
+        const hour = document.getElementById('sch-hour').value;
+        const minute = document.getElementById('sch-minute').value;
+        
+        if (!name) return toast('请输入任务名称', 'warning');
+
+        // 构建简化版 Cron: 0 minute hour * * *
+        const cron_expr = `0 ${minute} ${hour} * * *`;
+        const data = { name, topic, cron_expr };
+
+        try {
+            await api.createJob(data);
+            modal.classList.remove('show');
+            toast('定时任务已创建', 'success');
+            loadSchedule();
+        } catch (e) { toast(e.message, 'error'); }
+    });
+
+    loadSchedule();
+</script>
+</body>
+</html>

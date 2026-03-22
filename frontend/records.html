@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 资讯智能体 // 稿件查看</title>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <link rel="stylesheet" href="/assets/main.css">
+    <style>
+        .img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+        .img-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:14px;border:1px solid var(--border-color);cursor:pointer;transition:var(--transition-el)}
+        .img-grid img:hover{transform:scale(1.03)}
+        .det-h{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-tech);margin-bottom:var(--space-md)}
+    </style>
+</head>
+<body>
+<canvas id="webgl-bg"></canvas>
+<div class="tech-label tech-label-tl">SYS.CORE // RECORDS_VIEW</div>
+<div class="tech-label tech-label-bl">ARCHIVE_VIEWER_V1.0_</div>
+
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-brand">AI.AGENT<span>资讯日报系统</span></div>
+        <div class="nav-label">导航</div>
+        <a href="/dashboard.html" class="nav-item"><i class="ph ph-squares-four"></i> Dashboard</a>
+        <a href="/publish.html"   class="nav-item"><i class="ph ph-rocket-launch"></i> 发布控制台</a>
+        <a href="/records.html"   class="nav-item active"><i class="ph ph-newspaper"></i> 稿件查看</a>
+        <a href="/sources.html"   class="nav-item"><i class="ph ph-rss"></i> 数据源配置</a>
+        <div class="sidebar-bottom">
+            <button class="theme-toggle" id="themeToggleBtn"><i class="ph ph-moon"></i><span>DARK</span></button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="top-bar">
+            <div>
+                <h1 class="page-title">数据档案</h1>
+                <p class="page-subtitle">ARCHIVE // 历史运行与发布记录查阅</p>
+            </div>
+            <select class="input-field" id="filter-status" style="width:140px;height:40px">
+                <option value="">全部状态</option>
+                <option value="success">成功</option>
+                <option value="failed">失败</option>
+                <option value="running">运行中</option>
+            </select>
+        </div>
+
+        <div class="card" style="padding:0">
+            <div class="table-wrap" style="border:none;border-radius:var(--radius-card)">
+                <table>
+                    <thead><tr>
+                        <th>#</th><th>标题 / 类型</th><th>状态</th>
+                        <th>发布时间</th><th>耗时</th><th>图片</th><th></th>
+                    </tr></thead>
+                    <tbody id="records-tbody">
+                        <tr><td colspan="7" style="text-align:center;padding:40px">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="pagination" id="pagination"></div>
+    </main>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detail-modal">
+    <div class="modal" style="max-width:780px">
+        <div class="flex items-center justify-between mb-lg">
+            <div>
+                <div class="badge mb-sm" id="det-badge">RECORD</div>
+                <h2 style="font-size:24px;font-weight:900;font-family:'Playfair Display',serif;margin-top:8px" id="det-title">—</h2>
+            </div>
+            <button class="btn-icon" id="btn-close-detail"><i class="ph ph-x"></i></button>
+        </div>
+        <div id="det-content-wrap" class="mb-lg">
+            <div class="det-h">正文内容</div>
+            <div style="background:var(--bg-surface-1);border-radius:20px;padding:var(--space-lg);font-size:14px;line-height:1.8;white-space:pre-wrap;max-height:220px;overflow-y:auto" id="det-content"></div>
+        </div>
+        <div id="det-tags-wrap" class="mb-lg">
+            <div class="det-h">话题标签</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px" id="det-tags"></div>
+        </div>
+        <div id="det-images-wrap" class="mb-lg">
+            <div class="det-h">配图</div>
+            <div class="img-grid" id="det-images"></div>
+        </div>
+        <div id="det-log-wrap">
+            <div class="det-h">运行日志</div>
+            <div class="log-terminal" id="det-log" style="max-height:180px"></div>
+        </div>
+        <div id="det-error-wrap" style="display:none;margin-top:var(--space-lg)">
+            <div class="det-h">错误信息</div>
+            <div style="background:rgba(239,68,68,.1);border-radius:14px;padding:var(--space-md);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--color-error)" id="det-error"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Lightbox -->
+<div class="modal-overlay" id="lightbox">
+    <div style="position:relative">
+        <img id="lb-img" style="max-width:90vw;max-height:85vh;border-radius:20px;display:block">
+        <button class="btn-icon" style="position:absolute;top:-14px;right:-14px;background:var(--bg-surface-3)" id="btn-lb-close">
+            <i class="ph ph-x"></i>
+        </button>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script type="module">
+    import { api, initTheme, initWebGL, toast, fmtDate, statusBadge } from '/assets/api.js';
+    initTheme('themeToggleBtn');
+    initWebGL('webgl-bg');
+
+    let currentPage = 1;
+    const filterEl = document.getElementById('filter-status');
+
+    function dur(s, e) {
+        if (!s||!e) return '—';
+        const d = Math.floor((new Date(e)-new Date(s))/1000);
+        return d<60?`${d}s`:`${Math.floor(d/60)}m${d%60}s`;
+    }
+
+    async function loadRecords(page=1) {
+        currentPage = page;
+        const status = filterEl.value;
+        const tbody = document.getElementById('records-tbody');
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px">加载中...</td></tr>';
+        try {
+            const url=`/api/records?page=${page}&page_size=20${status?'&status='+status:''}`;
+            const records = await (await fetch(url)).json();
+            if (!records.length) {
+                tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-secondary)">暂无记录</td></tr>';
+                return;
+            }
+            tbody.innerHTML = records.map(r=>`<tr>
+                <td class="font-mono text-tech" style="font-size:11px">${r.id}</td>
+                <td>
+                  <div style="font-weight:500;max-width:280px" class="truncate">${r.xhs_title||(r.mode==='node_test'?`[节点测试] ${r.node_name||''}`:'[完整流程]')}</div>
+                  <div class="font-mono text-tech" style="font-size:10px;margin-top:2px">${r.mode==='node_test'?'NODE_TEST':'FULL_PIPELINE'}</div>
+                </td>
+                <td>${statusBadge(r.status)}</td>
+                <td class="text-secondary" style="font-size:12px">${fmtDate(r.started_at)}</td>
+                <td class="font-mono text-tech" style="font-size:11px">${dur(r.started_at,r.finished_at)}</td>
+                <td>${r.has_images?'<span class="badge badge-success">有</span>':'<span class="text-tech" style="font-size:12px">—</span>'}</td>
+                <td><button class="btn btn-ghost btn-sm det-btn" data-id="${r.id}"><i class="ph ph-eye"></i> 查看</button></td>
+            </tr>`).join('');
+            tbody.querySelectorAll('.det-btn').forEach(btn=>btn.addEventListener('click',()=>openDetail(+btn.dataset.id)));
+            const pag=document.getElementById('pagination');
+            pag.innerHTML=`
+                <button class="btn btn-ghost btn-sm" id="btn-prev" ${page<=1?'disabled style="opacity:.3"':''}>
+                    <i class="ph ph-caret-left"></i> 上一页
+                </button>
+                <span class="font-mono text-tech" style="font-size:11px">PAGE_${String(page).padStart(3,'0')}</span>
+                <button class="btn btn-ghost btn-sm" id="btn-next" ${records.length<20?'disabled style="opacity:.3"':''}>
+                    下一页 <i class="ph ph-caret-right"></i>
+                </button>`;
+            pag.querySelector('#btn-prev')?.addEventListener('click',()=>loadRecords(page-1));
+            pag.querySelector('#btn-next')?.addEventListener('click',()=>loadRecords(page+1));
+        } catch(e) {
+            tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--color-error)">加载失败: ${e.message}</td></tr>`;
+        }
+    }
+
+    async function openDetail(id) {
+        document.getElementById('detail-modal').classList.add('show');
+        try {
+            const r = await api.getRecord(id);
+            document.getElementById('det-title').textContent = r.xhs_title||(r.mode==='node_test'?`节点测试: ${r.node_name}`:'完整流程记录');
+            document.getElementById('det-badge').textContent = r.mode==='node_test'?`NODE_${(r.node_name||'').toUpperCase()}`:'FULL_PIPELINE';
+            const cw=document.getElementById('det-content-wrap');
+            if (r.xhs_content) { document.getElementById('det-content').textContent=r.xhs_content; cw.style.display=''; }
+            else cw.style.display='none';
+            const tw=document.getElementById('det-tags-wrap');
+            if (r.xhs_tags?.length) { document.getElementById('det-tags').innerHTML=r.xhs_tags.map(t=>`<span class="badge">${t}</span>`).join(''); tw.style.display=''; }
+            else tw.style.display='none';
+            const iw=document.getElementById('det-images-wrap');
+            if (r.image_paths?.length) {
+                document.getElementById('det-images').innerHTML=r.image_paths.map(p=>`<img src="/api/image?path=${encodeURIComponent(p)}" onerror="this.style.opacity=.3" alt="配图" data-src="/api/image?path=${encodeURIComponent(p)}">`).join('');
+                iw.style.display='';
+                iw.querySelectorAll('img').forEach(img=>img.addEventListener('click',()=>openLightbox(img.dataset.src)));
+            } else iw.style.display='none';
+            const lw=document.getElementById('det-log-wrap');
+            if (r.run_log) { document.getElementById('det-log').textContent=r.run_log; lw.style.display=''; }
+            else lw.style.display='none';
+            const ew=document.getElementById('det-error-wrap');
+            if (r.error_log) { document.getElementById('det-error').textContent=r.error_log; ew.style.display=''; }
+            else ew.style.display='none';
+        } catch(e) { toast(e.message,'error'); }
+    }
+
+    function openLightbox(src) {
+        document.getElementById('lb-img').src=src;
+        document.getElementById('lightbox').classList.add('show');
+    }
+
+    document.getElementById('btn-close-detail').addEventListener('click',()=>document.getElementById('detail-modal').classList.remove('show'));
+    document.getElementById('btn-lb-close').addEventListener('click',()=>document.getElementById('lightbox').classList.remove('show'));
+    document.getElementById('lightbox').addEventListener('click',e=>{if(e.target===e.currentTarget)document.getElementById('lightbox').classList.remove('show')});
+    filterEl.addEventListener('change',()=>loadRecords(1));
+
+    loadRecords(1);
+    setInterval(()=>loadRecords(currentPage),30000);
+</script>
+</body>
+</html>

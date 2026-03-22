@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 资讯智能体 // 数据源配置</title>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <link rel="stylesheet" href="/assets/main.css">
+</head>
+<body>
+<canvas id="webgl-bg"></canvas>
+<div class="tech-label tech-label-tl">SYS.CORE // RSS_SOURCES</div>
+<div class="tech-label tech-label-bl">FEED_MANAGER_V1.0_</div>
+
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-brand">AI.AGENT<span>资讯日报系统</span></div>
+        <div class="nav-label">导航</div>
+        <a href="/dashboard.html" class="nav-item"><i class="ph ph-squares-four"></i> Dashboard</a>
+        <a href="/publish.html"   class="nav-item"><i class="ph ph-rocket-launch"></i> 发布控制台</a>
+        <a href="/records.html"   class="nav-item"><i class="ph ph-newspaper"></i> 稿件查看</a>
+        <a href="/sources.html"   class="nav-item active"><i class="ph ph-rss"></i> 数据源配置</a>
+        <div class="sidebar-bottom">
+            <button class="theme-toggle" id="themeToggleBtn"><i class="ph ph-moon"></i><span>DARK</span></button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="top-bar">
+            <div>
+                <h1 class="page-title">数据源配置</h1>
+                <p class="page-subtitle">管理 RSS 抓取源 · 支持增删改查与连通性验证</p>
+            </div>
+            <button class="btn btn-primary" id="btn-add-source">
+                <i class="ph ph-plus"></i> 添加数据源
+            </button>
+        </div>
+
+        <!-- Stats row -->
+        <div class="grid-3 mb-xl" id="source-stats">
+            <div class="card card-sm stat-card">
+                <div class="stat-label">总数据源</div>
+                <div class="stat-value" id="s-total">—</div>
+            </div>
+            <div class="card card-sm stat-card">
+                <div class="stat-label">已启用</div>
+                <div class="stat-value" id="s-enabled" style="color:var(--color-success)">—</div>
+            </div>
+            <div class="card card-sm stat-card">
+                <div class="stat-label">已禁用</div>
+                <div class="stat-value" id="s-disabled" style="color:var(--text-tech)">—</div>
+            </div>
+        </div>
+
+        <!-- Source list -->
+        <div id="sources-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:var(--space-md)">
+            <div class="text-secondary text-sm" style="padding:20px">加载中...</div>
+        </div>
+    </main>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="source-modal">
+    <div class="modal">
+        <div class="flex items-center justify-between mb-lg">
+            <div>
+                <div class="badge mb-sm" id="modal-badge">ADD_SOURCE</div>
+                <h3 style="font-size:18px;font-weight:600" id="modal-title">添加数据源</h3>
+            </div>
+            <button class="btn-icon" id="btn-close-modal"><i class="ph ph-x"></i></button>
+        </div>
+
+        <input type="hidden" id="edit-id">
+        <div class="flex-col gap-md">
+            <div class="input-group">
+                <label class="input-label">名称</label>
+                <input type="text" class="input-field" id="src-name" placeholder="例如：机器之心">
+            </div>
+            <div class="input-group">
+                <label class="input-label">分类</label>
+                <select class="input-field" id="src-category">
+                    <option>大模型动态</option>
+                    <option>开发工具更新</option>
+                    <option>GitHub开源热榜</option>
+                    <option>前沿研究</option>
+                    <option>综合资讯</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label class="input-label">RSS URL</label>
+                <input type="url" class="input-field" id="src-url" placeholder="https://example.com/feed.xml">
+            </div>
+            <div class="input-group">
+                <label class="input-label">描述（可选）</label>
+                <input type="text" class="input-field" id="src-desc" placeholder="简短描述该数据源内容">
+            </div>
+        </div>
+
+        <div class="flex" style="gap:var(--space-md);margin-top:var(--space-xl)">
+            <button class="btn btn-primary" id="btn-save-source" style="flex:1">
+                <i class="ph ph-check"></i> SAVE SOURCE
+            </button>
+            <button class="btn btn-ghost" id="btn-cancel-modal">取消</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script type="module">
+    import { api, initTheme, initWebGL, toast } from '/assets/api.js';
+    initTheme('themeToggleBtn');
+    initWebGL('webgl-bg');
+
+    const CATEGORY_COLORS = {
+        '大模型动态': '#818cf8',
+        '开发工具更新': '#34d399',
+        'GitHub开源热榜': '#fb923c',
+        '前沿研究': '#f472b6',
+        '综合资讯': 'var(--text-tech)',
+    };
+
+    async function loadSources() {
+        try {
+            const sources = await api.getSources();
+            const total = sources.length;
+            const enabled = sources.filter(s=>s.enabled).length;
+            document.getElementById('s-total').textContent = total;
+            document.getElementById('s-enabled').textContent = enabled;
+            document.getElementById('s-disabled').textContent = total - enabled;
+
+            const grid = document.getElementById('sources-grid');
+            if (!sources.length) {
+                grid.innerHTML = '<div class="text-secondary text-sm" style="padding:20px">暂无数据源</div>';
+                return;
+            }
+            grid.innerHTML = sources.map(s => `
+                <div class="source-card ${!s.enabled?'':''}">
+                    <div style="flex-shrink:0;width:40px;height:40px;border-radius:var(--radius-pill);background:var(--bg-surface-2);display:flex;align-items:center;justify-content:center">
+                        <i class="ph ph-rss" style="font-size:20px;color:${CATEGORY_COLORS[s.category]||'var(--text-tech)'}"></i>
+                    </div>
+                    <div class="source-card-body">
+                        <div class="flex items-center gap-sm" style="margin-bottom:4px">
+                            <span class="source-name">${s.name}</span>
+                            <span class="badge" style="background:rgba(255,255,255,.05);font-size:9px">${s.category}</span>
+                            ${!s.enabled?'<span class="badge badge-warning" style="font-size:9px">已禁用</span>':''}
+                        </div>
+                        <div class="source-url">${s.url}</div>
+                        ${s.description?`<div class="text-secondary text-sm" style="margin-top:4px">${s.description}</div>`:''}
+                        <div class="flex gap-sm" style="margin-top:var(--space-sm)">
+                            <button class="btn btn-ghost btn-sm btn-validate" data-id="${s.id}" title="验证 URL 可达性">
+                                <i class="ph ph-plug"></i> 验证
+                            </button>
+                            <button class="btn btn-ghost btn-sm btn-edit" data-src='${JSON.stringify(s)}'>
+                                <i class="ph ph-pencil"></i>
+                            </button>
+                            <button class="btn btn-ghost btn-sm btn-toggle" data-id="${s.id}" data-enabled="${s.enabled}">
+                                ${s.enabled?'<i class="ph ph-pause"></i> 禁用':'<i class="ph ph-play"></i> 启用'}
+                            </button>
+                            <button class="btn btn-ghost btn-sm btn-delete" data-id="${s.id}" style="color:var(--color-error)">
+                                <i class="ph ph-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Validate
+            grid.querySelectorAll('.btn-validate').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="ph ph-circle-notch"></i> 验证中...';
+                    try {
+                        const res = await api.validateSource(+btn.dataset.id);
+                        if (res.valid) toast(`✓ ${res.message}`, 'success');
+                        else toast(`✗ ${res.message}`, 'error');
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="ph ph-plug"></i> 验证';
+                    }
+                });
+            });
+
+            // Edit
+            grid.querySelectorAll('.btn-edit').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const s = JSON.parse(btn.dataset.src);
+                    openModal(s);
+                });
+            });
+
+            // Toggle enable/disable
+            grid.querySelectorAll('.btn-toggle').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const enabled = btn.dataset.enabled === 'true';
+                    await api.updateSource(+btn.dataset.id, { enabled: !enabled });
+                    toast(enabled ? '已禁用' : '已启用', 'success');
+                    loadSources();
+                });
+            });
+
+            // Delete
+            grid.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    if (!confirm('确认删除该数据源？')) return;
+                    await api.deleteSource(+btn.dataset.id);
+                    toast('已删除', 'success');
+                    loadSources();
+                });
+            });
+        } catch (e) {
+            document.getElementById('sources-grid').innerHTML = `<div class="text-secondary text-sm">加载失败: ${e.message}</div>`;
+        }
+    }
+
+    // Modal
+    const modal = document.getElementById('source-modal');
+
+    function openModal(src = null) {
+        document.getElementById('edit-id').value = src?.id || '';
+        document.getElementById('src-name').value = src?.name || '';
+        document.getElementById('src-url').value = src?.url || '';
+        document.getElementById('src-desc').value = src?.description || '';
+        const cat = document.getElementById('src-category');
+        if (src?.category) {
+            for (let o of cat.options) { if (o.value === src.category) { o.selected = true; break; } }
+        }
+        document.getElementById('modal-badge').textContent = src ? 'EDIT_SOURCE' : 'ADD_SOURCE';
+        document.getElementById('modal-title').textContent = src ? '编辑数据源' : '添加数据源';
+        modal.classList.add('show');
+    }
+
+    function closeModal() { modal.classList.remove('show'); }
+    document.getElementById('btn-add-source').addEventListener('click', () => openModal());
+    document.getElementById('btn-close-modal').addEventListener('click', closeModal);
+    document.getElementById('btn-cancel-modal').addEventListener('click', closeModal);
+
+    document.getElementById('btn-save-source').addEventListener('click', async () => {
+        const id = document.getElementById('edit-id').value;
+        const data = {
+            name: document.getElementById('src-name').value.trim(),
+            category: document.getElementById('src-category').value,
+            url: document.getElementById('src-url').value.trim(),
+            description: document.getElementById('src-desc').value.trim(),
+        };
+        if (!data.name || !data.url) return toast('名称和 URL 为必填项', 'warning');
+        try {
+            if (id) await api.updateSource(+id, data);
+            else    await api.createSource(data);
+            closeModal();
+            toast(id ? '已更新' : '已添加', 'success');
+            loadSources();
+        } catch (e) { toast(e.message, 'error'); }
+    });
+
+    loadSources();
+</script>
+</body>
+</html>
