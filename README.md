@@ -135,7 +135,7 @@ HTTPS_PROXY=http://127.0.0.1:7897
 ### Reddit 热议样刊
 | 封面卡片 | 评论卡片 |
 | :---: | :---: |
-| ![Reddit 封面](image\card_20260321_222448_01.png) | ![Reddit 评论](image\card_20260321_222448_02.png) |
+| ![Reddit 封面](image/card_20260321_222448_01.png) | ![Reddit 评论](image/card_20260321_222448_02.png) |
 
 ---
 
